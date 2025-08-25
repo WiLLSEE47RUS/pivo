@@ -1,0 +1,96 @@
+:root{
+  --page-bg: #ffffff;
+  --header-bg: #30AF36; /* зелёный для заголовков */
+  --header-fg: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --group-fg: #ffffff;
+  --group-bg: #30AF36;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  display: grid;
+  place-items: center;
+}
+
+/* Центровка и область для масштабирования */
+.table-outer{
+  display: grid;
+  place-items: center;
+  width: min(1200px, 95vw);
+  height: 95vh;               /* почти вся высота экрана */
+  padding: 8px;
+}
+
+.table-inner{
+  transform-origin: center center;
+}
+
+/* Таблица */
+table{
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 900px; /* чтобы 8 колонок читались; при масштабе ужимается */
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Верхний ряд заголовка колонок */
+thead th{
+  background: var(--header-bg);
+  color: var(--header-fg);
+  text-align: center;
+  font-weight: 700;
+  padding: 10px 8px;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  user-select: none;
+}
+thead th:last-child{ border-right: none; }
+
+/* Строки данных */
+tbody td{
+  padding: 10px 8px;
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+tbody tr td:last-child{ border-right: none; }
+
+/* Заголовок группы (полосой на всю ширину) */
+tbody tr.group-row td{
+  background: var(--group-bg);
+  color: var(--group-fg);
+  text-align: center;
+  font-weight: 700;
+  border-top: 1px solid var(--group-bg);
+  padding: 8px 6px;
+}
+
+/* Примечания и ошибки */
+.note{
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+caption.error{
+  caption-side: top;
+  padding: 12px;
+  color: #b91c1c;
+  font-weight: 600;
+}

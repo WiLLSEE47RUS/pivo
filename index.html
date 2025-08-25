@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Группированная таблица</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Обёртка, чтобы центрировать и масштабировать таблицу под высоту экрана -->
+  <div class="table-outer">
+    <div class="table-inner">
+      <table id="data-table" aria-label="Группированная таблица"></table>
+    </div>
+  </div>
+
+  <noscript>Для построения таблицы нужен JavaScript.</noscript>
+
+  <script>
+    // Константы — требования из ТЗ
+    const MAX_ROWS = 27;   // максимум строк данных (без учёта заголовков и групп)
+    const MAX_COLS = 8;    // фиксированное число столбцов
+    const CONFIG_URL = 'config.json'; // путь к конфигу
+
+    const $table = document.getElementById('data-table');
+
+    // Утилиты
+    const padOrSlice = (arr, size) => {
+      const a = arr.slice(0, size);
+      while (a.length < size) a.push('');
+      return a;
+    };
+
+    function buildTable(conf) {
+      const columns = padOrSlice(conf.columns ?? [], MAX_COLS);
+
+      // Очистим и создадим thead/tbody
+      $table.innerHTML = '';
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      columns.forEach((name) => {
+        const th = document.createElement('th');
+        th.textContent = name || '\u00A0';
+        th.scope = 'col';
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+      $table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      let usedRows = 0;
+      let truncated = false;
+
+      (conf.groups ?? []).forEach((g) => {
+        if (usedRows >= MAX_ROWS) return;
+
+        // Строка заголовка группы (зелёная, на всю ширину)
+        const trGroup = document.createElement('tr');
+        trGroup.className = 'group-row';
+        const td = document.createElement('td');
+        td.colSpan = MAX_COLS;
+        td.textContent = g.title ?? 'Группа';
+        trGroup.appendChild(td);
+        tbody.appendChild(trGroup);
+
+        // Строки данных группы
+        for (const row of (g.rows ?? [])) {
+          if (usedRows >= MAX_ROWS) { truncated = true; break; }
+          const tr = document.createElement('tr');
+          padOrSlice(row, MAX_COLS).forEach((val) => {
+            const td = document.createElement('td');
+            td.textContent = (val ?? '').toString();
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+          usedRows++;
+        }
+      });
+
+      $table.appendChild(tbody);
+
+      // Плашка о том, что данные урезаны до MAX_ROWS
+      const existingNote = document.querySelector('.note');
+      if (existingNote) existingNote.remove();
+      if (truncated) {
+        const note = document.createElement('div');
+        note.className = 'note';
+        note.textContent = `Показаны только первые ${MAX_ROWS} строк данных.`;
+        document.querySelector('.table-outer').appendChild(note);
+      }
+
+      // После рендера — подогнать масштаб под высоту и ширину вьюпорта
+      scaleToFit();
+    }
+
+    function scaleToFit() {
+      const outer = document.querySelector('.table-outer');
+      const inner = document.querySelector('.table-inner');
+
+      // Сброс масштаба, чтобы измерить «натуральный» размер
+      inner.style.transform = 'scale(1)';
+      inner.style.height = 'auto';
+      inner.style.width = 'auto';
+
+      // Немного внутренних полей для дыхания
+      const pad = 16;
+
+      const availH = outer.clientHeight - pad;
+      const availW = outer.clientWidth - pad;
+      const needH = inner.scrollHeight;
+      const needW = inner.scrollWidth;
+
+      const sH = availH / needH;
+      const sW = availW / needW;
+      const s = Math.min(1, sH, sW);
+
+      inner.style.transform = `scale(${s})`;
+    }
+
+    // Пересчёт при ресайзе
+    window.addEventListener('resize', () => {
+      // debounce простым requestAnimationFrame
+      window.requestAnimationFrame(scaleToFit);
+    });
+
+    // Загрузка конфига и рендер
+    fetch(CONFIG_URL)
+      .then(r => {
+        if (!r.ok) throw new Error('Не удалось загрузить config.json');
+        return r.json();
+      })
+      .then(buildTable)
+      .catch(err => {
+        $table.innerHTML = `<caption class="error">Ошибка: ${err.message}</caption>`;
+      });
+  </script>
+</body>
+</html>
